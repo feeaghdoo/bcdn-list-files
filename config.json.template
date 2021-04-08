@@ -1,0 +1,9 @@
+{
+    "pass": "",
+    "storageZone": "",
+    "pullZone": "",
+    "storageServer": "https://storage.bunnycdn.com/",
+    "dirs": {
+        "test": "/test/"
+    }
+}

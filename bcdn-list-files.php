@@ -1,5 +1,6 @@
 <?php
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: https://cytu.be');
 
 $config = file_get_contents("config.json");
 if ($config === false) {
@@ -17,7 +18,8 @@ $dirs = $config["dirs"];
 
 function getBcdnDirectory($mainPath, $subPath) {
     global $pass, $storagePath, $externalPath;
-    $curl = curl_init($storagePath . $mainPath . $subPath);
+    $curl = curl_init();
+    curl_setopt($curl, CURLOPT_URL, $storagePath . "/" . implode("/", array_map("rawurlencode", explode("/", $mainPath . "/" . $subPath))));
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($curl, CURLOPT_HTTPHEADER, array("Accept: application/json", "AccessKey: " . $pass));
     $curlResult = curl_exec($curl);
@@ -34,14 +36,12 @@ function getBcdnDirectory($mainPath, $subPath) {
         for ($i = 0; $i < count($fileArray); $i++) {
             $file = $fileArray[$i];
             $filePath = substr($subPath, 0, -1);
-            if ($filePath === "") {
-                $filePath = null;
-            }
             $fileObj = array("filename" => $file->ObjectName, "path" => $filePath, "directory" => $file->IsDirectory);
             if ($fileObj["directory"] === true) {
                 $output = array_merge($output, json_decode(getBcdnDirectory($mainPath, $subPath . $fileObj["filename"] . "/")));
             }
-            $fileObj["filename"] = $externalPath . $mainPath . $subPath . $fileObj["filename"];
+            $fileObj["filename"] = $externalPath . "/" .  $mainPath . "/" . ($subPath ? $subPath . "/" : "") . $fileObj["filename"];
+            $fileObj["path"] = $subPath;
             array_push($output, $fileObj);
         }
         return json_encode($output);
